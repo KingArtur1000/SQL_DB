@@ -31,3 +31,55 @@ WHERE Drivers.DriverID NOT IN (
     FROM Trips
     WHERE TripDate >= DATEADD(DAY, -3, GETDATE())
 );
+
+
+
+
+
+-- ЧЕРЕЗ ПОДЗАПРОСЫ :)
+-- 1) Список водителей, выезжавших в рейс на прошлой неделе
+SELECT DriverID, LastName, FirstName 
+FROM Drivers
+WHERE DriverID IN (
+    SELECT DISTINCT DriverID 
+    FROM Trips 
+    WHERE TripDate >= DATEADD(WEEK, -1, GETDATE()) - DATEPART(WEEKDAY, GETDATE()) + 1
+      AND TripDate < DATEADD(WEEK, 0, GETDATE()) - DATEPART(WEEKDAY, GETDATE()) + 1
+);
+
+
+-- 2) Список автомобилей марки «МАЗ»
+SELECT * FROM Cars 
+WHERE BrandID = (SELECT BrandID FROM Brands WHERE BrandName = 'МАЗ');
+
+
+-- 3) Список автомобилей, выезжавших в рейс на автомобилях МАЗ, ВАЗ или ГАЗ
+SELECT DISTINCT * FROM Trips 
+WHERE CarID IN (
+    SELECT CarID 
+    FROM Cars 
+    WHERE BrandID IN (
+        SELECT BrandID 
+        FROM Brands 
+        WHERE BrandName IN ('МАЗ', 'ВАЗ', 'ГАЗ')
+    )
+);
+
+
+-- 4) Фамилия водителя, выезжавшего в рейс максимальной протяженности
+SELECT LastName, FirstName FROM Drivers 
+WHERE DriverID = (
+    SELECT TOP 1 DriverID 
+    FROM Trips
+    ORDER BY Distance DESC
+);
+
+
+-- 5) Список водителей, не выезжавших в рейс за последние 3 дня
+SELECT DriverID, LastName, FirstName FROM Drivers 
+WHERE DriverID NOT IN (
+    SELECT DISTINCT DriverID 
+    FROM Trips 
+    WHERE TripDate >= DATEADD(DAY, -3, GETDATE())
+);
+
